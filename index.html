@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Blog</title>
+    <style type="text/css">
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      #blogs-container {
+        display: flex;
+        justify-content: space-around;
+        min-height: 70vh;
+        align-items: center;
+      }
+
+      #divider {
+        border: 1px solid #333;
+        min-height: 100vh;
+      }
+
+      header {
+        display: flex;
+        justify-content: center;
+        margin: auto;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 1rem;
+        min-height: 15vh;
+      }
+
+      footer {
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 1rem;
+        width: 100%;
+        min-height: 15vh;
+      }
+
+      .grid-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-gap: 1rem;
+        margin: 1rem;
+      }
+
+      .grid-item {
+        padding: 2rem;
+      }
+
+      a {
+        color: #333;
+        text-decoration: none;
+      }
+
+      a:hover {
+        color: #fff;
+        background-color: #333;
+      }
+
+      input[type="text"],
+      textarea {
+        width: 100%;
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      button {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 5px;
+        background-color: #333;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #fff;
+        color: #333;
+        border: 2px solid #333;
+      }
+
+      .grid-title-section {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: right;
+      }
+
+      .actions a {
+        padding: 7px 12px;
+        border-radius: 15%;
+      }
+
+      .past-post-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .past-post-item span {
+        font-weight: 100;
+      }
+
+      .past-post-item:hover {
+        text-decoration: underline;
+      }
+
+      #past-blogs {
+        min-width: 35vh;
+      }
+
+      #blogs-list {
+        max-width: 65vh;
+      }
+
+      .past-blogs-title-section,
+      .create-new-post {
+        display: flex;
+        justify-content: center;
+        padding: 2rem;
+      }
+
+      .view-blog-item {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 50%;
+      }
+
+      .view-blog-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      #edit-or-new-blog-container {
+        margin: auto;
+        display: flex;
+        justify-content: center;
+        margin-top: 3rem;
+        margin-bottom: 3rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header><h1>My Blog</h1></header>
+    <main>
+      <div id="blogs-container">
+        <article id="past-blogs"></article>
+        <div id="divider"></div>
+        <article id="blogs-list"></article>
+      </div>
+    </main>
+    <footer>
+      <p>© My Blog</p>
+    </footer>
+    <script type="text/javascript">
+      const baseUrl = "https://restedblog.herokuapp.com/hackerrank/api";
+
+      const blogs = [
+        {
+          id: 1278002762936,
+          text: "This is the content of my blog post. This is the content of my blog post. This is the content of my blog post. This is the content of my blog post. This is the content of my blog post. This is the content of my blog post. This is the content of my blog post. This is the content of my blog post. This is the content of my blog post.",
+          timestamp: "30/10/2021",
+          title: "The Title of My Blog Post",
+        },
+        {
+          id: 1277858967163,
+          text: "Dear diary, today I met a fish who could talk. Dear diary, today I met a fish who could talk. Dear diary, today I met a fish who could talk. Dear diary, today I met a fish who could talk.Dear diary, today I met a fish who could talk.",
+          timestamp: "25/08/2014",
+          title: "A Weird Thing Happened...",
+        },
+      ];
+
+      const pastBlogsData = [
+        {
+          id: 1278002762936,
+          text: "This is the content of my blog post. This is the content of my blog post. This is the content of my blog post. This is the content of my blog post.",
+          timestamp: "30/10/2021",
+          title: "The Title of My Blog Post",
+        },
+        {
+          id: 1277858967163,
+          text: "Dear diary, today I met a fish who could talk. Dear diary, today I met a fish who could talk.  Dear diary, today I met a fish who could talk. Dear diary, today I met a fish who could talk. Dear diary, today I met a fish who could talk.",
+          timestamp: "25/08/2014",
+          title: "A Weird Thing Happened...",
+        },
+      ];
+
+      const allBlogs = [...blogs, ...pastBlogsData];
+
+      const blogsContainer = document.getElementById("blogs-container");
+      const pastBlogsContainer = document.getElementById("past-blogs");
+      const blogsListContainer = document.getElementById("blogs-list");
+
+      function generateBlogsList(list, containerId) {
+        list.forEach((item) => {
+          const element = generateSingleBlog(item);
+          containerId.appendChild(element);
+        });
+      }
+
+      /**
+        Generates the HTML content for displaying a list of past blog posts.
+        @param {Array} list - An array of objects representing the past blog posts to display.
+        @param {string} containerId - The ID of the HTML element where the generated content should be appended.
+        @returns {void}
+        */
+      function generatePastBlogs(list, containerId) {
+        const titleSection = document.createElement("div");
+        titleSection.classList.add("past-blogs-title-section");
+        titleSection.innerHTML = `<h3>PAST POSTS</h3>`;
+        containerId.appendChild(titleSection);
+        // Create and append HTML content for each blog post in the list
+        list.forEach((item) => {
+          const element = document.createElement("div");
+          element.classList.add("grid-item");
+          element.innerHTML = `
+            <div class="past-post-item" onclick="showViewBlog(${item.id})">
+              <span>${item.timestamp}</span> <span>-</span>
+              <span>POST ${item.id}</span>
+            </div>`;
+          containerId.appendChild(element);
+        });
+
+        // Create and append HTML content for the "Create New Post" button
+        const createNewPostButton = document.createElement("div");
+        createNewPostButton.classList.add("create-new-post");
+        createNewPostButton.innerHTML = `
+          <button onclick="generateEditNewBlogForm('new')">
+            CREATE NEW POST
+          </button>`;
+        containerId.appendChild(createNewPostButton);
+      }
+
+      // Display all blogs - past and latest
+      function main() {
+        // since the API is currently not working I've hardcoded the data and completing the task, pastBlogsData, blogs variable defined above
+        generatePastBlogs(pastBlogsData, pastBlogsContainer);
+        generateBlogsList(blogs, blogsListContainer);
+      }
+
+      main();
+
+      /**
+        Deletes a blog post with the specified blogId by sending a DELETE request to the server.
+        If the user confirms the deletion, the function sends a DELETE request to the server, then
+        reloads the page. If there is an error while deleting the post, an error message is logged to
+        the console. Currently the API throws CORS error
+        @param {number} blogId - The ID of the blog post to delete.
+        @returns {void}
+      */
+      function deleteBlog(blogId) {
+        const deleteBlogUrl = `${baseUrl}/blogs/${blogId}`;
+        const confirmed = window.confirm(
+          "Are you sure you want to delete this blog?"
+        );
+
+        if (confirmed) {
+          fetch(deleteBlogUrl, {
+            method: "DELETE",
+          })
+            .then(() => {
+              alert("Blog deleted successfully");
+              location.reload();
+            })
+            .catch((error) => {
+              console.error("Error deleting blog:", error);
+            });
+        }
+      }
+
+      /**
+        Generates a form to edit or shows a form for creating a new blog post.
+        @param {string} mode - The mode of the form, either 'edit' or 'new'.
+        @param {number} id - The id of the blog post to edit. If not provided, a new post will be created.
+      */
+      function generateEditNewBlogForm(mode, id) {
+        // find the blog post with the provided id, or create a new empty object
+        const blog = id ? allBlogs.find((item) => item.id === id) : {};
+        // create form and form elements
+        const editForm = document.createElement("form");
+        const editTitle = document.createElement("input");
+        const textBody = document.createElement("textarea");
+        const editSubmit = document.createElement("button");
+
+        // configure form elements
+        editTitle.type = "text";
+        editTitle.name = "title";
+        editTitle.value = mode === "edit" ? blog.title : "";
+        editTitle.placeholder = "Title";
+
+        textBody.name = "body";
+        textBody.rows = "10";
+        textBody.placeholder = "Body";
+        textBody.value = mode === "edit" ? blog.text : "";
+
+        editSubmit.type = "submit";
+        editSubmit.innerText = "Save";
+        editSubmit.classList.add("save-button");
+
+        // add form elements to form
+        editForm.appendChild(editTitle);
+        editForm.appendChild(textBody);
+        editForm.appendChild(editSubmit);
+
+        // add event listener to form
+        editForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const formData = new FormData(event.target);
+          const title = formData.get("title");
+          const body = formData.get("body");
+          let url = baseUrl;
+          url += mode === "edit" ? `/${id}` : "";
+          const method = mode === "edit" ? "PUT" : "POST";
+          fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, body, timestamp: new Date() }),
+          })
+            .then(() => {
+              alert("Blog updated successfully");
+            })
+            .catch((error) => {
+              console.error("Error updating blog:", error);
+            });
+        });
+
+        // clear the blogs container and add the form to it
+        blogsContainer.innerHTML = "";
+        blogsContainer.appendChild(editForm);
+      }
+
+      /**
+        Displays a view of a blog post based on the provided blog ID. And it also shows action buttons Edit and Delete
+        @param {number} id - The ID of the blog post to display.
+        @returns {undefined}
+      */
+      function showViewBlog(id) {
+        // Retrieve the blog post with the specified ID from the allBlogs array
+        const blog = allBlogs.find((item) => item.id === id);
+
+        // Create a new div element to contain the view of the blog post
+        const element = document.createElement("div");
+        element.classList.add("view-blog-item");
+
+        // Populate the div with the blog post content
+        element.innerHTML = `
+                    <div class="view-blog-section">
+                        <h3>POST ${blog.id}</h3>
+                        <span>${blog.timestamp}</span>
+                    </div>
+                    <p>${blog.text}</p>
+                    <div class="actions">
+                      <button onclick="generateEditNewBlogForm('edit', ${blog.id})">Edit</button>
+                      <button onclick="deleteBlog(${blog.id})">Delete</button>
+                    </div>`;
+
+        // Clear the existing blog posts container and append the new view
+        blogsContainer.innerHTML = "";
+        blogsContainer.appendChild(element);
+      }
+
+      /**
+        It is a util function and it generates a single blog post element with post id, timestamp, body text, and action buttons for View, Edit, and Delete.
+        @param {object} item - The blog post object containing id, timestamp, and text.
+        @returns {HTMLElement} The HTML element containing the blog post and action buttons.
+      */
+      function generateSingleBlog(item) {
+        const element = document.createElement("div");
+        element.classList.add("grid-item");
+        element.innerHTML = `
+                <div class="grid-title-section">
+                    <h3>POST ${item.id}</h3>
+                    <span>${item.timestamp}</span>
+                </div>
+                <p>${item.text}</p>
+                <div class="actions">
+                    <button onclick="showViewBlog(${item.id})">View</button>
+                    <button onclick="generateEditNewBlogForm('edit', ${item.id})">Edit</button>
+                    <button onclick="deleteBlog(${item.id})">Delete</button>
+                </div>
+              `;
+        return element;
+      }
+    </script>
+  </body>
+</html>
